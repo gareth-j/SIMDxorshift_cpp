@@ -26,7 +26,7 @@ Testing function : aes_dragontamer
 
 ### Requirements
 
-A processor that supports AVX2. An AVX-512 version is available for the few processors supporting these extensions.
+A processor that supports AVX2. An AVX-512 version is available for processors supporting these extensions.
 
 ### References
 
