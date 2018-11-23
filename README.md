@@ -4,7 +4,7 @@ A C++ implementation of Daniel Lemire's SIMD (single instruction multiple data) 
 
 ## Getting Started
 
-A version of Lemire's benchmarking function is included to allow testing of each implementation
+A version of Lemire's benchmarking function is included to allow testing of each implementation.
 
 All you should need to do is
 
@@ -26,7 +26,7 @@ Testing function : aes_dragontamer
 
 ### Requirements
 
-A processor that supports AVX2. An AVX-512 version is available for the few processors supporting these extensions.
+A processor that supports AVX2. An AVX-512 version is available for processors supporting these extensions.
 
 ### References
 
