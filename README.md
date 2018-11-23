@@ -4,7 +4,7 @@ A C++ implementation of Daniel Lemire's SIMD (single instruction multiple data) 
 
 ## Getting Started
 
-A version of Lemire's benchmarking function is included to allow testing of each implementation
+A version of Lemire's benchmarking function is included to allow testing of each implementation.
 
 All you should need to do is
 
