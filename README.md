@@ -10,7 +10,7 @@ All you should need to do is
 
 ```
 make
-./benchmark
+./simd_xor
 ```
 
 And you should get something like
