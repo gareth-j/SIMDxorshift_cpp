@@ -9,8 +9,8 @@ A version of Lemire's benchmarking function is included to allow testing of each
 All you should need to do is
 
 ```
-	make
-	./benchmark
+make
+./benchmark
 ```
 
 And you should get something like
