@@ -110,17 +110,17 @@ public:
     {
     	uint32_t repeats = 500;
 
-    	std::string my_string = "xor128";
+    	std::string my_string = "xorshift128plus";
     	benchmark_time(my_xor, repeats, my_string);
 
-    	std::string my_string1 = "xoro128_simd";
+    	std::string my_string1 = "simd_xorshift128plus";
     	benchmark_time(my_simd_xor, repeats, my_string1);
 
     	std::string my_string2 = "aes_dragontamer";
     	benchmark_time(my_dragon, repeats, my_string2);
 
     	#if defined(__AVX512F__)
-    		std::string my_string3 = "AVX512 xoro128_simd";
+    		std::string my_string3 = "simd_avx512_xorshift128plus";
 			benchmark_time(my_512simd_xor, repeats, my_string2);
 		#endif
 
