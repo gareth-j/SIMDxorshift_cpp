@@ -67,6 +67,25 @@ public:
 		// Create some 64-bit numbers
 		uint64_t seed1 = seed_part1 << 32 | seed_part2;
 		uint64_t seed2 = seed_part3 << 32 | seed_part4;
+
+
+		// Fix this 
+
+		uint64_t S0[8];
+		uint64_t S1[8];
+		
+		S0[0] = seed1;
+		S1[0] = seed2;
+
+	        // todo: fix this so that the init is correct
+		xorshift128plus_jump_onkeys(*S0, *S1, S0 + 1, S1 + 1);
+		xorshift128plus_jump_onkeys(*(S0 + 1), *(S1 + 1), S0 + 2, S1 + 2);
+		xorshift128plus_jump_onkeys(*(S0 + 2), *(S1 + 2), S0 + 3, S1 + 3);
+		key->part1 = _mm512_loadu_si512((const __m512i *) S0);
+		key->part2 = _mm512_loadu_si512((const __m512i *) S1);
+
+
+
                 
         S0[0] = seed1;
         S1[0] = seed2;
@@ -138,6 +157,29 @@ protected:
     }
 
 
+
+	    void avx512_xorshift128plus_init(uint64_t key1, uint64_t key2, avx512_xorshift128plus_key_t *key) 
+	    {
+
+	}
+	/*
+	 Return a 512-bit random "number"
+	 */
+	__m512i avx512_xorshift128plus(simd_avx512_xorshift128plus_key& key) 
+	{
+		__m512i s1 = key.part1;
+		const __m512i s0 = key.part2;
+		key.part1 = key.part2;
+		s1 = _mm512_xor_si512(key.part2, _mm512_slli_epi64(key.part2, 23));
+		key.part2 = _mm512_xor_si512(
+				_mm512_xor_si512(_mm512_xor_si512(s1, s0),
+						_mm512_srli_epi64(s1, 18)), _mm512_srli_epi64(s0, 5));
+		return _mm512_add_epi64(key.part2, s0);
+	}
+
+	#endif
+
+
 	void populateRandom_avx512_xorshift128plus_two(uint32_t* rand_arr, const uint32_t size) 
 	{
 		uint32_t i = 0;
@@ -150,14 +192,14 @@ protected:
 
 		while (i + 2 * block <= size) 
 		{
-			_mm512_storeu_si512((__m512i *)(rand_arr + i), avx512_xorshift128plus(my_key1));			
-			_mm512_storeu_si512((__m512i *)(rand_arr + i + block), avx512_xorshift128plus(my_key2));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i), simd_xorshift128plus_rand(my_key1));			
+			_mm512_storeu_si512((__m512i *)(rand_arr + i + block), simd_xorshift128plus_rand(my_key2));
 			
 			i += 2 * block;
 		}
 		while (i + block <= size) 
 		{
-			_mm512_storeu_si512((__m512i *)(rand_arr + i), avx512_xorshift128plus(my_key1));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i), simd_xorshift128plus_rand(my_key1));
 
 			i += block;
 		}
@@ -165,7 +207,7 @@ protected:
 		{
 			uint32_t buffer[sizeof(__m512i) / sizeof(uint32_t)];
 
-			_mm512_storeu_si512((__m512i *)buffer, avx512_xorshift128plus(my_key1));
+			_mm512_storeu_si512((__m512i *)buffer, simd_xorshift128plus_rand(my_key1));
 
 			memcpy(rand_arr + i, buffer, sizeof(uint32_t) * (size - i));
 		}
@@ -185,24 +227,24 @@ protected:
 		const uint32_t block = sizeof(__m512i) / sizeof(uint32_t); // 16
 		while (i + 4 * block <= size) 
 		{
-			_mm512_storeu_si512((__m512i *)(rand_arr + i), avx512_xorshift128plus(mykey1));
-			_mm512_storeu_si512((__m512i *)(rand_arr + i + block), avx512_xorshift128plus(mykey2));
-			_mm512_storeu_si512((__m512i *)(rand_arr + i + 2 * block), avx512_xorshift128plus(mykey3));
-			_mm512_storeu_si512((__m512i *)(rand_arr + i + 3 * block), avx512_xorshift128plus(mykey4));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i), simd_xorshift128plus_rand(my_key1));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i + block), simd_xorshift128plus_rand(my_key2));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i + 2 * block), simd_xorshift128plus_rand(my_key3));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i + 3 * block), simd_xorshift128plus_rand(my_key4));
 
 			i += 4 * block;
 		}
 		while (i + 2 * block <= size) 
 		{
-			_mm512_storeu_si512((__m512i *)(rand_arr + i), avx512_xorshift128plus(mykey1));
-			_mm512_storeu_si512((__m512i *)(rand_arr + i + block), avx512_xorshift128plus(mykey2));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i), simd_xorshift128plus_rand(my_key1));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i + block), simd_xorshift128plus_rand(my_key2));
 
 			i += 2 * block;
 		}
 
 		while (i + block <= size) 
 		{
-			_mm512_storeu_si512((__m512i *)(rand_arr + i), avx512_xorshift128plus(mykey1));
+			_mm512_storeu_si512((__m512i *)(rand_arr + i), simd_xorshift128plus_rand(my_key1));
 			i += block;
 		}
 
@@ -210,7 +252,7 @@ protected:
 		{
 			uint32_t buffer[sizeof(__m512i) / sizeof(uint32_t)];
 
-			_mm512_storeu_si512((__m512i *)buffer, avx512_xorshift128plus(mykey1));
+			_mm512_storeu_si512((__m512i *)buffer, simd_xorshift128plus_rand(my_key1));
 
 			std::memcpy(rand_arr + i, buffer, sizeof(uint32_t) * (size - i));
 		}
