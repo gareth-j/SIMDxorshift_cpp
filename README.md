@@ -18,11 +18,11 @@ And you should get something like
 ```
 Testing function : xor128
  2.28 cycles per operation
-Testing function : xoro128_simd
+Testing function : xor128_simd
  0.70 cycles per operation
-Testing function : xoro128_simd_two
+Testing function : xor128_simd_two
  0.62 cycles per operation
-Testing function : xoro128_simd_four
+Testing function : xor128_simd_four
  0.75 cycles per operation
 Testing function : aes_dragontamer
  0.58 cycles per operation
