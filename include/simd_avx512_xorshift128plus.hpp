@@ -8,6 +8,8 @@
 
 #include "randutils.hpp"
 
+
+
 // Creates two 512-bit seed variables for use by the PRNG
 class simd_avx512_xorshift128plus_key 
 {
@@ -114,7 +116,7 @@ protected:
         uint32_t i = 0;
 
         // Automatically seeded 512-bit state variables
-        simd_avx512_xorshift128plus_key mykey;
+        simd_avx512_xorshift128plus_key my_key1;
 
 		// This should be 16
 		const uint32_t block = sizeof(__m512i) / sizeof(uint32_t);

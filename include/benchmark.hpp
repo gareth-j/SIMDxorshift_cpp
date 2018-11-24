@@ -110,18 +110,18 @@ public:
     {
     	uint32_t repeats = 500;
 
-    	std::string my_string = "xorshift128plus";
-    	benchmark_time(my_xor, repeats, my_string);
+    	std::string fn_name = "xor128";
+    	benchmark_time(my_xor, repeats, fn_name);
 
-    	std::string my_string1 = "simd_xorshift128plus";
-    	benchmark_time(my_simd_xor, repeats, my_string1);
+    	fn_name = "xoro128_simd";
+    	benchmark_time(my_simd_xor, repeats, fn_name);
 
-    	std::string my_string2 = "aes_dragontamer";
-    	benchmark_time(my_dragon, repeats, my_string2);
+    	fn_name = "aes_dragontamer";
+    	benchmark_time(my_dragon, repeats, fn_name);
 
     	#if defined(__AVX512F__)
-    		std::string my_string3 = "simd_avx512_xorshift128plus";
-			benchmark_time(my_512simd_xor, repeats, my_string2);
+    		fn_name = "AVX512 xoro128_simd";
+			benchmark_time(my_512simd_xor, repeats, fn_name);
 		#endif
 
     }
