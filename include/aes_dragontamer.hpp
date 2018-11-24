@@ -8,6 +8,12 @@
 
 #include "randutils.hpp"
 
+// This may be needed for older versions of GCC
+#if __GNUC__ < 8
+	#define _mm256_set_m128i(v0, v1)  _mm256_insertf128_si256(_mm256_castsi128_si256(v1), (v0), 1)
+	#define _mm256_setr_m128i(v0, v1) _mm256_set_m128i((v1), (v0))
+#endif
+
 class aes_dragontamer_key
 {
 protected:

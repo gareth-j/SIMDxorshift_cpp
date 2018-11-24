@@ -55,8 +55,8 @@ public:
         randutils::auto_seed_128 seeder;
         seeder.generate(seed_array.begin(), seed_array.end());
 
-        uint64_t S0[4];
-        uint64_t S1[4];
+        uint64_t S0[8];
+        uint64_t S1[8];
 
         uint64_t seed_part1 = seed_array[0];
 		uint64_t seed_part2 = seed_array[1];
@@ -173,7 +173,7 @@ protected:
     }
 
     // Uses four generators (states really) to fill an array
-	void populateRandom_avx_xorshift128plus_four(uint32_t *rand_arr, uint32_t size) 
+	void populate_array_simd_xorshift128plus_four(uint32_t *rand_arr, uint32_t size) 
 	{
 		uint32_t i = 0;
 
@@ -225,6 +225,16 @@ public:
     void fill_array(uint32_t* rand_arr, uint32_t N_rands)
     {
     	return populate_array_simd_xorshift128plus(rand_arr, N_rands);
+    }
+
+    void fill_array_two(uint32_t* rand_arr, uint32_t N_rands)
+    {
+    	return populate_array_simd_xorshift128plus_two(rand_arr, N_rands);
+    }
+
+    void fill_array_four(uint32_t* rand_arr, uint32_t N_rands)
+    {
+    	return populate_array_simd_xorshift128plus_four(rand_arr, N_rands);
     }
 
     __m256i get_rand(simd_xorshift128plus_key& key)
