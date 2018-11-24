@@ -84,8 +84,8 @@ public:
 		xorshift128plus_jump_onkeys(*(S0 + 6), *(S1 + 6), S0 + 7, S1 + 7);
 
 		part1 = _mm512_loadu_si512((const __m512i *) S0);
-		part2 = _mm512_loadu_si512((const __m512i *) S1);             
-       
+		part2 = _mm512_loadu_si512((const __m512i *) S1);            
+		       
     }
 
     __m512i part1;
@@ -96,6 +96,8 @@ public:
 class simd_avx512_xorshift128plus
 {
 protected:
+	simd_avx512_xorshift128plus_key mykey;
+
     __m512i simd_avx512_xorshift128plus_rand(simd_avx512_xorshift128plus_key& key) 
     {
 		__m512i s1 = key.part1;

@@ -26,6 +26,8 @@ protected:
 #if defined(__AVX512F__)
 	simd_avx512_xorshift128plus my_512simd_xor;
 #endif
+
+
 	
 public:
 	static const int N_rands = 50000;
@@ -67,8 +69,13 @@ public:
         *cycles = (uint64_t(cyc_high) << 32) | cyc_low;                          
     }
 
-    template <typename T>
-    void benchmark_time(T& test_obj, uint32_t repeat, std::string& str)
+ 
+	// template <typename T>
+	// void benchmark_time(T& test_obj, uint32_t repeat, std::string& str)
+	
+	// TODO - there seems to be a bit of overhead with this method, need to look into it.
+    template <typename TEST_CLASS>
+    void benchmark_time(void (TEST_CLASS::*test_fn)(uint32_t*, uint32_t), TEST_CLASS& class_obj, const uint32_t repeat, const std::string& str)
     {
         std::fflush(nullptr);
 
@@ -86,7 +93,9 @@ public:
             
             RDTSC_start(&cycles_start);
          
-            test_obj.fill_array(rand_arr.data(), N_rands);
+            // test_obj.fill_array(rand_arr.data(), N_rands);
+
+            (class_obj.*test_fn)(rand_arr.data(), N_rands);
             
             RDTSC_final(&cycles_final);
 
@@ -111,17 +120,26 @@ public:
     	uint32_t repeats = 500;
 
     	std::string fn_name = "xor128";
-    	benchmark_time(my_xor, repeats, fn_name);
+    	// benchmark_time(my_xor, repeats, fn_name);
+    	benchmark_time(&xorshift128plus::fill_array, my_xor, repeats, fn_name);
 
     	fn_name = "xoro128_simd";
-    	benchmark_time(my_simd_xor, repeats, fn_name);
+    	benchmark_time(&simd_xorshift128plus::fill_array, my_simd_xor, repeats, fn_name);
+
+		fn_name = "xoro128_simd_two";
+		benchmark_time(&simd_xorshift128plus::fill_array_two, my_simd_xor, repeats, fn_name);
+
+		fn_name = "xoro128_simd_four";
+		benchmark_time(&simd_xorshift128plus::fill_array_four, my_simd_xor, repeats, fn_name);
 
     	fn_name = "aes_dragontamer";
-    	benchmark_time(my_dragon, repeats, fn_name);
+		benchmark_time(&aes_dragontamer::fill_array, my_dragon, repeats, fn_name);
+  		// benchmark_time(my_dragon, repeats, fn_name);
 
     	#if defined(__AVX512F__)
     		fn_name = "AVX512 xoro128_simd";
-			benchmark_time(my_512simd_xor, repeats, fn_name);
+    		benchmark_time(&simd_avx512_xorshift128plus::fill_array, my_dragon, repeats, fn_name);
+			// benchmark_time(my_512simd_xor, repeats, fn_name);
 		#endif
 
     }

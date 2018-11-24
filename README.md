@@ -16,12 +16,16 @@ make
 And you should get something like
 
 ```
-Testing function : xorshift128plus
- 1.83 cycles per operation
-Testing function : simd_xorshift128plus
- 0.66 cycles per operation
+Testing function : xor128
+ 2.28 cycles per operation
+Testing function : xoro128_simd
+ 0.70 cycles per operation
+Testing function : xoro128_simd_two
+ 0.62 cycles per operation
+Testing function : xoro128_simd_four
+ 0.75 cycles per operation
 Testing function : aes_dragontamer
- 0.61 cycles per operation
+ 0.58 cycles per operation
 ```
 
 ### Requirements
