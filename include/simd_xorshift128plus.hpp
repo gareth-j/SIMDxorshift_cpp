@@ -47,6 +47,7 @@ protected:
         output2[0] = s1;
     };
 
+
 public:
     simd_xorshift128plus_key()
     {
@@ -217,6 +218,42 @@ protected:
 		}
 	}
 
+	/**
+	* Given 8 random 32-bit integers in randomvals,
+	* derive 8 random 32-bit integers that are less than
+	* the 32-bit integers in upperbound using the
+	* following heuristic:
+	*
+	*     ( randomval * upperbound ) >> 32
+	*
+	* This approach generates a very slight bias (of the order of upperbound/2**32), but 
+	* in a high performance setting, it is probably quite acceptable, and preferable
+	* to branching.
+	*
+	* Reference : Daniel Lemire, Fast Random Integer Generation in an Interval
+	* ACM Transactions on Modeling and Computer Simulation (to appear)
+	* https://arxiv.org/abs/1805.10941
+	*
+	*/
+	static __m256i avx_randombound_epu32(__m256i randomvals, __m256i upperbound) 
+	{
+		/* four values */
+		// _mm256_srli_epi64 - shift right by 32
+		// _mm256_mul_epu32
+		// Multiply the low unsigned 32-bit integers from each packed 64-bit element in a and b
+		__m256i evenparts = _mm256_srli_epi64(_mm256_mul_epu32(randomvals, upperbound), 32);
+
+		/* four other values */
+		__m256i oddparts = _mm256_mul_epu32(_mm256_srli_epi64(randomvals, 32),_mm256_srli_epi64(upperbound, 32));
+		
+		/* note:shift could be replaced by shuffle */
+		/* need to blend the eight values */
+		// Blend packed 32-bit integers from a and b using control mask imm8, and store the results in dst.
+		return _mm256_blend_epi32(evenparts, oddparts, 0b10101010);
+	}
+
+
+	
 
 public:
     // Do nothing at the moment
@@ -246,6 +283,42 @@ public:
     {
     	return simd_xorshift128plus_rand(key);
     }
+
+    void simd_xorshift128plus_shuffle32(uint32_t *storage, uint32_t size) 
+	{
+		uint32_t i;
+		uint32_t randomsource[8];
+
+		// Create the key here?
+		simd_xorshift128plus_key key;
+
+		__m256i interval = _mm256_setr_epi32(size, size - 1, size - 2, size - 3, size - 4, size - 5, size - 6, size - 7);
+
+		__m256i R = avx_randombound_epu32(simd_xorshift128plus_rand(key), interval);
+
+		_mm256_storeu_si256((__m256i *) randomsource, R);
+
+		__m256i vec8 = _mm256_set1_epi32(8);
+
+		for (i = size; i > 1;) 
+		{
+			for (int j = 0; j < 8; ++j) 
+			{
+				uint32_t nextpos = randomsource[j];
+				int tmp = storage[i - 1]; // likely in cache
+				int val = storage[nextpos]; // could be costly
+				storage[i - 1] = val;
+				storage[nextpos] = tmp; // you might have to read this store later
+				i--;
+			}
+
+			interval = _mm256_sub_epi32(interval, vec8);
+
+			R = avx_randombound_epu32(simd_xorshift128plus_rand(key), interval);
+
+			_mm256_storeu_si256((__m256i *) randomsource, R);
+		}
+	}
 };
 
 

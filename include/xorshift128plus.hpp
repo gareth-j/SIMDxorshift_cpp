@@ -56,6 +56,31 @@ protected:
 		}
 	}
 
+
+	
+	// Compute two random number in [0,bound1) and [0,bound2)
+	// has a slight bias, but that's probably the last of your concerns given
+	// that xorshift128plus is not perfect to begin with.
+
+	void xorshift128plus_bounded_two_by_two(xorshift128plus_key& key, uint32_t bound1, uint32_t bound2, uint32_t* bounded1, uint32_t* bounded2) 
+	{
+		uint64_t rand = xorshift128plus_rand(key);
+		*bounded1 = ((rand & UINT64_C(0xFFFFFFFF)) * bound1) >> 32;
+		*bounded2 = ((rand >> 32) * bound2) >> 32;
+	}
+
+	uint32_t xorshift128plus_bounded(xorshift128plus_key& key, uint32_t bound) 
+	{
+		uint64_t rand = xorshift128plus_rand(key);
+		return ((rand & UINT64_C(0xFFFFFFFF)) * bound ) >> 32;
+	}
+
+
+
+
+
+
+
 public:
 
 	xorshift128plus(){} // Do nothing here at the moment
@@ -75,5 +100,47 @@ public:
     {
     	return xorshift128plus_rand(key);
     }
+
+
+    	// Fisher-Yates shuffle, shuffling an array of integers, uses the provided key
+	void xorshift128plus_shuffle32(uint32_t* storage, const uint32_t size) 
+	{
+		// Create the key here?
+		xorshift128plus_key key;
+
+		uint32_t i;
+		
+		uint32_t nextpos1, nextpos2;
+
+		for (i=size; i>2; i-=2) 
+		{
+			xorshift128plus_bounded_two_by_two(key,i,i-1,&nextpos1,&nextpos2);
+
+			const uint32_t tmp1 = storage[i-1];// likely in cache
+			
+			const uint32_t val1 = storage[nextpos1]; // could be costly
+			
+			storage[i - 1] = val1;
+			
+			storage[nextpos1] = tmp1; // you might have to read this store later
+
+			uint32_t tmp2 = storage[i-2];// likely in cache
+			
+			uint32_t val2 = storage[nextpos2]; // could be costly
+			
+			storage[i - 2] = val2;
+			
+			storage[nextpos2] = tmp2; // you might have to read this store later
+		}
+
+		if(i>1) 
+		{
+			const uint32_t nextpos = xorshift128plus_bounded(key,i);
+			const uint32_t tmp = storage[i-1];// likely in cache
+			const uint32_t val = storage[nextpos]; // could be costly
+			storage[i - 1] = val;
+			storage[nextpos] = tmp; // you might have to read this store later
+		}
+	}
 	
 };
