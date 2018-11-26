@@ -342,21 +342,24 @@ void seed_seq_fe<count,IntRep,mix_rounds>::param(OutputIterator dest) const
         auto hash_const = INIT_A*fast_exp(MULT_A, IntRep(count * count));
 
         for (auto src = mixer_copy.rbegin(); src != mixer_copy.rend(); ++src)
-            for (auto dest = mixer_copy.rbegin(); dest != mixer_copy.rend();
-                 ++dest)
-                if (src != dest) {
+        {
+            for (auto local_dest = mixer_copy.rbegin(); local_dest != mixer_copy.rend(); ++local_dest)
+            {
+                if (src != local_dest) {
                     IntRep revhashed = *src;
                     auto mult_const = hash_const;
                     hash_const *= INV_A;
                     revhashed ^= hash_const;
                     revhashed *= mult_const;
                     revhashed ^= revhashed >> XSHIFT;
-                    IntRep unmixed = *dest;
+                    IntRep unmixed = *local_dest;
                     unmixed ^= unmixed >> XSHIFT;
                     unmixed += MIX_MULT_R*revhashed;
                     unmixed *= MIX_INV_L;
-                    *dest = unmixed;
+                    *local_dest = unmixed;
                 }
+            }
+        }
         for (auto i = mixer_copy.rbegin(); i != mixer_copy.rend(); ++i) {
             IntRep unhashed = *i;
             unhashed ^= unhashed >> XSHIFT;
@@ -366,6 +369,7 @@ void seed_seq_fe<count,IntRep,mix_rounds>::param(OutputIterator dest) const
             *i = unhashed;
         }
     }
+
     std::copy(mixer_copy.begin(), mixer_copy.end(), dest);
 }
 
@@ -424,7 +428,7 @@ using seed_seq_fe256 = seed_seq_fe<8, uint32_t>;
 template <typename SeedSeq>
 class auto_seeded : public SeedSeq 
 {
-    using default_seeds = std::array<uint32_t, 11>;
+    using default_seeds = std::array<uint32_t, 13>;
 
     template <typename T>
     static uint32_t crushto32(T value)
@@ -474,8 +478,7 @@ class auto_seeded : public SeedSeq
 
         // Classic seed, the time.  It ought to change, especially since
         // this is (hopefully) nanosecond resolution time.
-        auto hitime = std::chrono::high_resolution_clock::now()
-                        .time_since_epoch().count();
+        auto hitime = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 
         // Address of the thing being initialized.  That can mean that
         // different seed sequences in different places in memory will be
@@ -518,7 +521,7 @@ class auto_seeded : public SeedSeq
         auto pid = crushto32(RANDUTILS_GETPID);
         auto cpu = crushto32(RANDUTILS_CPU_ENTROPY);
 
-        return {{random_int, crushto32(hitime), stack, heap, self_data,
+        return {{compile_stamp, time_func, random_int, crushto32(hitime), stack, heap, self_data,
                  self_func, exit_func, thread_id, type_id, pid, cpu}};
     }
 
