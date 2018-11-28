@@ -51,7 +51,8 @@ protected:
         // (Hopefully) place these in a register
         register unsigned cyc_high, cyc_low;
 
-        // Blackmagic ASM
+        // Use the read time-stamp counter so we can count the 
+        // number of cycles
         __asm volatile("cpuid\n\t"                                               
                        "rdtsc\n\t"                                               
                        "mov %%edx, %0\n\t"                                       
@@ -68,12 +69,13 @@ protected:
         // (Hopefully) place these in a register
         register unsigned cyc_high, cyc_low;
 
-        // Blackmagic ASM
+        // Use the read time-stamp counter so we can count the 
+        // number of cycles
         __asm volatile("rdtscp\n\t"                                               
-                       "mov %%edx, %0\n\t"                                        
-                       "mov %%eax, %1\n\t"                                        
-                       "cpuid\n\t"                                                
-                       : "=r"(cyc_high), "=r"(cyc_low)::"%rax", "%rbx", "%rcx",   
+                       "mov %%edx, %0\n\t"
+                       "mov %%eax, %1\n\t"
+                       "cpuid\n\t"
+                       : "=r"(cyc_high), "=r"(cyc_low)::"%rax", "%rbx", "%rcx",
                          "%rdx");
 
         *cycles = (uint64_t(cyc_high) << 32) | cyc_low;                          
@@ -100,6 +102,7 @@ protected:
         		array_cache_prefetch(test_array, size);
 
             // Pretend to clobber memory 
+            // Don't allow reordering of memory access instructions
             __asm volatile("" ::: "memory");
             
             RDTSC_start(&cycles_start);
@@ -126,6 +129,9 @@ protected:
 
 
 	// Sorting functions    
+
+    // Check what this does with big numbers, it must roll over
+
 	static int qsort_compare_uint32_t(const void *a, const void *b) 
 	{
 	    return ( *(uint32_t *)a - *(uint32_t *)b );
@@ -181,13 +187,20 @@ public:
 
 	    std::vector<uint32_t> test_array(N_shuffle);
 
-	    // auto rand_fn = [&](auto){return my_xor.get_rand(my_normal_key);};
+	    auto rand_fn = [&](auto)
+	    {
+	    	uint64_t rand64 = my_xor.get_rand(my_normal_key);
+	    	
+	    	// Shift it over to get a 32-bit number
+	    	uint32_t rand32 = rand64 << 32;
 
-	    // Currently just using rand
-	    auto rand_fn = [](auto){return rand();};
+	    	return rand32;
+	    };
 
+		// Fill the array with random numbers from our xorshift generator
 	    std::transform(test_array.begin(), test_array.end(), test_array.begin(), rand_fn);
 
+	    // Create another array identical to the test array
 	    auto pristine_array = test_array;
 	    
 	    // Make sure they're identical
