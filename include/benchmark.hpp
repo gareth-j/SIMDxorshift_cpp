@@ -122,19 +122,15 @@ protected:
         // Calculate the number of cycles per operation
         float cycles_per_op = min_diff / float(S);
 
-        // std::printf(" %.2f cycles per operation", cycles_per_op);
         std::cout << std::setprecision(2) << cycles_per_op << " cycles per operation\n";
         std::fflush(nullptr);
     }
 
 
 	// Sorting functions    
-
-    // Check what this does with big numbers, it must roll over
-
-	static int qsort_compare_uint32_t(const void *a, const void *b) 
+	static int qsort_compare_uint32_t(const int a, const int b) 
 	{
-	    return ( *(uint32_t *)a - *(uint32_t *)b );
+		return a-b;
 	}
 
 	// Tries to put the array in cache
@@ -151,21 +147,15 @@ protected:
 	}
 
 	// Compare the arrays
-	bool sort_compare(uint32_t* shuf, uint32_t* orig, const uint32_t size) 
+	bool sort_compare(std::vector<uint32_t>& shuf, std::vector<uint32_t>& orig) 
 	{
-		std::qsort(shuf, size, sizeof(uint32_t), qsort_compare_uint32_t);
-		std::qsort(orig, size, sizeof(uint32_t), qsort_compare_uint32_t);
+		std::sort(shuf.begin(), shuf.end(), qsort_compare_uint32_t);
+		std::sort(orig.begin(), orig.end(), qsort_compare_uint32_t);
 
-		for(uint32_t k = 0; k < size; ++k)
-		{
-			if(shuf[k] != orig[k]) 
-			{
-				std::cout << "[bug - mismatch]\n";
-				return false;
-			}
-		}
-
-		return true;
+		if(shuf == orig)
+			return true;
+		else
+			return false;
 	}
 
 
@@ -204,7 +194,7 @@ public:
 	    auto pristine_array = test_array;
 	    
 	    // Make sure they're identical
-	    if(!sort_compare(test_array.data(), pristine_array.data(), N_shuffle))
+	    if(!sort_compare(test_array, pristine_array))
 	    	return;
 
 	    // Try and prefetch data in the benchmarking function
@@ -214,14 +204,14 @@ public:
 
 	    benchmark_fn(&xorshift128plus::xorshift128plus_shuffle32, my_xor, test_array.data(), fn_name, N_shuffle, prefetch);
 
-   	    if(!sort_compare(test_array.data(), pristine_array.data(), N_shuffle))
+   	    if(!sort_compare(test_array, pristine_array))
 	    	return;
 
 	    fn_name = "simd_xorshift128plus_shuffle32";
 
 	    benchmark_fn(&simd_xorshift128plus::simd_xorshift128plus_shuffle32, my_simd_xor, test_array.data(), fn_name, N_shuffle, prefetch);
 
-		if(!sort_compare(test_array.data(), pristine_array.data(), N_shuffle))
+		if(!sort_compare(test_array, pristine_array))
 			return;
 
 		std::cout << "\n";
